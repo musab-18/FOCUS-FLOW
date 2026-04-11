@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "89002940560",
+    "project_id": "focus-timer-app-4a5c4",
+    "storage_bucket": "focus-timer-app-4a5c4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89002940560:android:f6467c852fc5e8279ae015",
+        "android_client_info": {
+          "package_name": "com.example.focus_timer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjnUdJVB5xOocnB7RMIK3ygioIZHU1eXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:89002940560:android:1e99a8d3a212b57b9ae015",
+        "android_client_info": {
+          "package_name": "com.example.focusflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjnUdJVB5xOocnB7RMIK3ygioIZHU1eXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
