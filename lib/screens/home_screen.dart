@@ -9,7 +9,6 @@ import '../providers/analytics_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/task_card.dart';
 import '../widgets/progress_ring.dart';
-import '../models/task_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -89,77 +88,110 @@ class _HomeTab extends StatelessWidget {
     final tasks = context.watch<TaskProvider>();
     final now = DateTime.now();
     final greeting = now.hour < 12 ? 'Good morning,' : now.hour < 17 ? 'Good afternoon,' : 'Good evening,';
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 768; // Adjust threshold for desktop
 
     return SafeArea(
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // Header Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000), // Prevent extreme stretching
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // Header Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: Row(
                     children: [
-                      Text(greeting, style: GoogleFonts.inter(fontSize: 14, color: AppColors.slateGrey, fontWeight: FontWeight.w500)),
-                      Text(auth.user?.name.split(' ').first ?? 'User',
-                          style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.slateDark)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(greeting, style: GoogleFonts.inter(fontSize: 14, color: AppColors.slateGrey, fontWeight: FontWeight.w500)),
+                          Text(auth.user?.name.split(' ').first ?? 'User',
+                              style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.slateDark)),
+                        ],
+                      ),
+                      const Spacer(),
+                      _HeaderIcon(icon: Icons.search_rounded, onTap: () => Navigator.pushNamed(context, '/search')),
+                      const SizedBox(width: 12),
+                      _NotificationBell(),
                     ],
                   ),
-                  const Spacer(),
-                  _HeaderIcon(icon: Icons.search_rounded, onTap: () => Navigator.pushNamed(context, '/search')),
-                  const SizedBox(width: 12),
-                  _NotificationBell(),
-                ],
-              ),
-            ),
-          ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  const _AttractiveStreakCard(), // NEW REDESIGN
-                  const SizedBox(height: 24),
-                  _HeroProgressCard(tasks: tasks),
-                  const SizedBox(height: 24),
-                  const _QuickActionsGrid(),
-                  const SizedBox(height: 32),
-                  _SectionHeader(
-                    title: "Today's Focus",
-                    count: '${tasks.todayTasks.where((t) => t.isCompleted).length}/${tasks.todayTasks.length}',
-                    onViewAll: () => Navigator.pushNamed(context, '/task-list'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (tasks.todayTasks.isEmpty)
-            const _EmptyState()
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final task = tasks.todayTasks[i];
-                    return TaskCard(
-                      task: task,
-                      onTap: () => Navigator.pushNamed(context, '/task-detail', arguments: task),
-                      onToggle: () => context.read<TaskProvider>().toggleTaskComplete(task),
-                      onDelete: () => context.read<TaskProvider>().deleteTask(task.id),
-                    );
-                  },
-                  childCount: tasks.todayTasks.length,
                 ),
               ),
-            ),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
+
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const _AttractiveStreakCard(),
+                      const SizedBox(height: 24),
+                      
+                      _HeroProgressCard(tasks: tasks),
+                      const SizedBox(height: 24),
+                      
+                      // Keep actions horizontal and balanced even on desktop
+                      const _QuickActionsGrid(),
+
+                      const SizedBox(height: 32),
+                      _SectionHeader(
+                        title: "Today's Focus",
+                        count: '${tasks.todayTasks.where((t) => t.isCompleted).length}/${tasks.todayTasks.length}',
+                        onViewAll: () => Navigator.pushNamed(context, '/task-list'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (tasks.todayTasks.isEmpty)
+                const _EmptyState()
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  sliver: isTablet 
+                    ? SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 3,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final task = tasks.todayTasks[i];
+                            return TaskCard(
+                              task: task,
+                              onTap: () => Navigator.pushNamed(context, '/task-detail', arguments: task),
+                              onToggle: () => context.read<TaskProvider>().toggleTaskComplete(task),
+                              onDelete: () => context.read<TaskProvider>().deleteTask(task.id),
+                            );
+                          },
+                          childCount: tasks.todayTasks.length,
+                        ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final task = tasks.todayTasks[i];
+                            return TaskCard(
+                              task: task,
+                              onTap: () => Navigator.pushNamed(context, '/task-detail', arguments: task),
+                              onToggle: () => context.read<TaskProvider>().toggleTaskComplete(task),
+                              onDelete: () => context.read<TaskProvider>().deleteTask(task.id),
+                            );
+                          },
+                          childCount: tasks.todayTasks.length,
+                        ),
+                      ),
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -183,70 +215,25 @@ class _AttractiveStreakCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         border: Border.all(color: const Color(0xFFFF8936).withOpacity(0.3), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF8936).withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Row(
           children: [
-            Positioned(
-              right: -20,
-              top: -20,
-              child: Icon(Icons.local_fire_department_rounded, 
-                size: 100, color: const Color(0xFFFF8936).withOpacity(0.1)),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: const Color(0xFFFF8936), borderRadius: BorderRadius.circular(16)),
+              child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 28),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF8936),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFF8936).withOpacity(0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 28),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${streak == 0 ? 1 : streak} DAY STREAK',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFFFF8936),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      Text(
-                        'You\'re on fire! Keep it up.',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.slateGrey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFFF8936), size: 16),
-                ],
-              ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${streak == 0 ? 1 : streak} DAY STREAK',
+                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFFFF8936))),
+                Text('You\'re on fire! Keep it up.',
+                  style: GoogleFonts.inter(fontSize: 13, color: AppColors.slateGrey)),
+              ],
             ),
           ],
         ),
@@ -284,13 +271,9 @@ class _HeroProgressCard extends StatelessWidget {
     final pending = tasks.todayTasks.length - done;
 
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFF16E73), Color(0xFFF28B8F)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ),
+        gradient: const LinearGradient(colors: [Color(0xFFF16E73), Color(0xFFF28B8F)]),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -299,14 +282,9 @@ class _HeroProgressCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Today's Progress", 
-                  style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Text('${(progress * 100).toInt()}%', 
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 4),
-                Text('$done of ${tasks.todayTasks.length} tasks done', 
-                  style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                Text("Today's Progress", style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w600)),
+                Text('${(progress * 100).toInt()}%', style: GoogleFonts.inter(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)),
+                Text('$done of ${tasks.todayTasks.length} tasks done', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9))),
                 const SizedBox(height: 20),
                 Row(
                   children: [
@@ -318,14 +296,7 @@ class _HeroProgressCard extends StatelessWidget {
               ],
             ),
           ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              ProgressRing(progress: progress, size: 100, color: Colors.white, label: '', strokeWidth: 10),
-              Text('${(progress * 100).toInt()}%', 
-                style: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-            ],
-          ),
+          ProgressRing(progress: progress, size: 100, color: Colors.white, label: '', strokeWidth: 10),
         ],
       ),
     );
@@ -358,14 +329,14 @@ class _QuickActionsGrid extends StatelessWidget {
   const _QuickActionsGrid();
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _ActionTile(icon: Icons.timer_rounded, label: 'Focus', color: AppColors.deepCoral, route: '/pomodoro'),
-        _ActionTile(icon: Icons.folder_rounded, label: 'Projects', color: AppColors.purple, route: '/projects'),
-        _ActionTile(icon: Icons.book_rounded, label: 'Journal', color: AppColors.teal, route: '/journal'),
-        _ActionTile(icon: Icons.flag_rounded, label: 'Goals', color: AppColors.warning, route: '/goals'),
-      ],
-    );
+    final actions = [
+      const _ActionTile(icon: Icons.timer_rounded, label: 'Focus', color: AppColors.deepCoral, route: '/pomodoro'),
+      const _ActionTile(icon: Icons.folder_rounded, label: 'Projects', color: AppColors.purple, route: '/projects'),
+      const _ActionTile(icon: Icons.book_rounded, label: 'Journal', color: AppColors.teal, route: '/journal'),
+      const _ActionTile(icon: Icons.flag_rounded, label: 'Goals', color: AppColors.warning, route: '/goals'),
+    ];
+
+    return Row(children: actions.map((a) => Expanded(child: a)).toList());
   }
 }
 
@@ -378,20 +349,18 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, route),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(16)),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 8),
-              Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
-            ],
-          ),
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+          ],
         ),
       ),
     );

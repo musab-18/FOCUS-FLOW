@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/auth_provider.dart' ;
 import '../providers/analytics_provider.dart' ;
 import '../providers/task_provider.dart' ;
@@ -14,8 +15,6 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final analytics = context.watch<AnalyticsProvider>();
-    final tasks = context.watch<TaskProvider>();
-    final focus = context.watch<FocusProvider>();
     final user = auth.user;
 
     return Scaffold(
@@ -47,18 +46,9 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 42,
-                    backgroundColor: Colors.white.withOpacity(0.3),
-                    child: Text(
-                      user?.name.isNotEmpty == true
-                          ? user!.name[0].toUpperCase()
-                          : '?',
-                      style: GoogleFonts.inter(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white),
-                    ),
+                  _AdaptiveAvatar(
+                    photoUrl: null, // Placeholder: user?.photoUrl
+                    initial: user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : '?',
                   ),
                   const SizedBox(height: 14),
                   Text(user?.name ?? 'User',
@@ -84,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
                       _Vline(),
                       _ProfileStat(
                           label: 'Streak\nDays',
-                          value: '${user?.streakDays ?? 0}'),
+                          value: '${analytics.currentStreak}'),
                     ],
                   ),
                 ],
@@ -207,6 +197,49 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AdaptiveAvatar extends StatelessWidget {
+  final String? photoUrl;
+  final String initial;
+  const _AdaptiveAvatar({this.photoUrl, required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      height: 84,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.3),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+      ),
+      child: ClipOval(
+        child: photoUrl != null && photoUrl!.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: photoUrl!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                errorWidget: (context, url, error) => _InitialPlaceholder(initial: initial),
+              )
+            : _InitialPlaceholder(initial: initial),
+      ),
+    );
+  }
+}
+
+class _InitialPlaceholder extends StatelessWidget {
+  final String initial;
+  const _InitialPlaceholder({required this.initial});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        initial,
+        style: GoogleFonts.inter(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white),
       ),
     );
   }

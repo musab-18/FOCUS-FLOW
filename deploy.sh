@@ -1,21 +1,18 @@
 #!/bin/bash
 
-# FocusFlow - Quick Deployment Script
-# This script deploys your app to Firebase Hosting
-
+# FocusFlow - Robust Deployment Script
 echo "🚀 FocusFlow Deployment Script"
 echo "================================"
-echo ""
 
-# Check if Firebase CLI is installed
-if ! command -v firebase &> /dev/null
-then
-    echo "❌ Firebase CLI not found!"
-    echo "📦 Installing Firebase CLI..."
-    npm install -g firebase-tools
-fi
+# 1. Clean old builds
+echo "🧹 Cleaning project..."
+flutter clean
 
-# Build the web app
+# 2. Get dependencies
+echo "📦 Getting dependencies..."
+flutter pub get
+
+# 3. Build the web app (Standard Build)
 echo "🔨 Building Flutter web app..."
 flutter build web --release
 
@@ -25,25 +22,14 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Build successful!"
-echo ""
 
-# Check if Firebase is initialized
-if [ ! -f "firebase.json" ]; then
-    echo "⚙️  Initializing Firebase..."
-    firebase init hosting
-fi
-
-# Deploy to Firebase
+# 4. Deploy to Firebase
 echo "🚀 Deploying to Firebase Hosting..."
 firebase deploy --only hosting
 
 if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Deployment successful!"
-    echo "🌐 Your app is now live!"
-    echo ""
-    echo "📱 Share this URL: https://focus-timer-app-4a5c4.web.app"
-    echo ""
+    echo "✅ Deployment successful! Your app is updated."
+    echo "🌐 URL: https://focus-timer-app-4a5c4.web.app"
 else
     echo "❌ Deployment failed!"
     exit 1

@@ -7,7 +7,9 @@ import '../theme/app_theme.dart';
 class AnalyticsProvider extends ChangeNotifier {
   List<TaskModel> _tasks = [];
   List<FocusSessionModel> _sessions = [];
-  ThemeMode _themeMode = ThemeMode.system;
+  
+  // Defaulting strictly to Light Theme
+  ThemeMode _themeMode = ThemeMode.light;
   Color _themeColor = AppColors.deepCoral;
   String _language = 'English';
   bool _notificationsEnabled = true;
@@ -25,11 +27,10 @@ class AnalyticsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ─── STREAK LOGIC (NEW) ──────────────────────────────────
+  // ─── STREAK LOGIC ──────────────────────────────────
   int get currentStreak {
     if (_tasks.isEmpty) return 0;
     
-    // Get unique dates where at least one task was completed
     final completedDates = _tasks
         .where((t) => t.isCompleted && t.dueDate != null)
         .map((t) => DateTime(t.dueDate!.year, t.dueDate!.month, t.dueDate!.day))
@@ -38,14 +39,12 @@ class AnalyticsProvider extends ChangeNotifier {
 
     if (completedDates.isEmpty) return 0;
 
-    // Sort descending (newest first)
     completedDates.sort((a, b) => b.compareTo(a));
 
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     final yesterdayDate = todayDate.subtract(const Duration(days: 1));
 
-    // If the latest completion isn't today or yesterday, streak is broken
     if (completedDates.first != todayDate && completedDates.first != yesterdayDate) {
       return 0;
     }
@@ -121,12 +120,10 @@ class AnalyticsProvider extends ChangeNotifier {
   // ─── THEME & SETTINGS ────────────────────────────────────
   Future<void> loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeStr = prefs.getString('themeMode') ?? 'system';
-    _themeMode = themeStr == 'light'
-        ? ThemeMode.light
-        : themeStr == 'dark'
-            ? ThemeMode.dark
-            : ThemeMode.system;
+    
+    // Defaulting to light theme unless explicitly changed to dark in settings
+    final themeStr = prefs.getString('themeMode') ?? 'light';
+    _themeMode = themeStr == 'dark' ? ThemeMode.dark : ThemeMode.light;
 
     final colorVal = prefs.getInt('themeColor');
     if (colorVal != null) {

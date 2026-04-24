@@ -3,17 +3,9 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart' ;
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -26,16 +18,6 @@ class DefaultFirebaseOptions {
         return ios;
       case TargetPlatform.macOS:
         return macos;
-      case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -43,39 +25,32 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCJNQz_1sI8cLU0XQJumDQtg_6U5sd6MPU',
-    appId: '1:89002940560:web:72e75277c3cbca2f9ae015',
-    messagingSenderId: '89002940560',
-    projectId: 'focus-timer-app-4a5c4',
-    authDomain: 'focus-timer-app-4a5c4.firebaseapp.com',
-    storageBucket: 'focus-timer-app-4a5c4.firebasestorage.app',
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_WEB'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    authDomain: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebaseapp.com',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     measurementId: 'G-03BVPM7Q0X',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCjnUdJVB5xOocnB7RMIK3ygioIZHU1eXc',
-    appId: '1:89002940560:android:1e99a8d3a212b57b9ae015',
-    messagingSenderId: '89002940560',
-    projectId: 'focus-timer-app-4a5c4',
-    storageBucket: 'focus-timer-app-4a5c4.firebasestorage.app',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_ANDROID'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_ANDROID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyC6f2S9PuklwQU5vqozXGQlGV-pvPU1BI4',
-    appId: '1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015',
-    messagingSenderId: '89002940560',
-    projectId: 'focus-timer-app-4a5c4',
-    storageBucket: 'focus-timer-app-4a5c4.firebasestorage.app',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_IOS'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_IOS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: 'com.example.focusflow',
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyC6f2S9PuklwQU5vqozXGQlGV-pvPU1BI4',
-    appId: '1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015',
-    messagingSenderId: '89002940560',
-    projectId: 'focus-timer-app-4a5c4',
-    storageBucket: 'focus-timer-app-4a5c4.firebasestorage.app',
-    iosBundleId: 'com.example.focusflow',
-  );
+  static FirebaseOptions get macos => ios;
 }

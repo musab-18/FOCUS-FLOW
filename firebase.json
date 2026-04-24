@@ -1,1 +1,54 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"focus-timer-app-4a5c4","appId":"1:89002940560:android:1e99a8d3a212b57b9ae015","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"focus-timer-app-4a5c4","appId":"1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"focus-timer-app-4a5c4","appId":"1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"focus-timer-app-4a5c4","configurations":{"android":"1:89002940560:android:1e99a8d3a212b57b9ae015","ios":"1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015","macos":"1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015","web":"1:89002940560:web:72e75277c3cbca2f9ae015"}}}}}}
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "focus-timer-app-4a5c4",
+          "appId": "1:89002940560:android:1e99a8d3a212b57b9ae015",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "focus-timer-app-4a5c4",
+          "appId": "1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "focus-timer-app-4a5c4",
+          "appId": "1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "focus-timer-app-4a5c4",
+          "configurations": {
+            "android": "1:89002940560:android:1e99a8d3a212b57b9ae015",
+            "ios": "1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015",
+            "macos": "1:89002940560:ios:f2f0d3dc3e6e5c7a9ae015",
+            "web": "1:89002940560:web:72e75277c3cbca2f9ae015"
+          }
+        }
+      }
+    }
+  }
+}

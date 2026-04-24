@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'theme/app_theme.dart';
 import 'providers/auth_provider.dart';
@@ -30,10 +32,8 @@ import 'screens/create_edit_task_screen.dart';
 import 'screens/category_manager_screen.dart';
 import 'screens/completed_tasks_screen.dart';
 import 'screens/pomodoro_screen.dart';
-import 'screens/focus_summary_screen.dart';
 import 'screens/distraction_blocker_screen.dart';
 import 'screens/journal_screen.dart';
-import 'screens/ambient_player_screen.dart';
 import 'screens/activity_dashboard_screen.dart';
 import 'screens/weekly_report_screen.dart';
 import 'screens/profile_screen.dart';
@@ -44,20 +44,38 @@ import 'screens/help_feedback_screen.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    await dotenv.load(fileName: ".env");
+    
+    if (kIsWeb) {
+      final apiKey = dotenv.env['FIREBASE_API_KEY_WEB'];
+      if (apiKey == null || apiKey.isEmpty) {
+        debugPrint('❌ CRITICAL: FIREBASE_API_KEY_WEB is missing!');
+      }
+    }
+
     GoogleFonts.config.allowRuntimeFetching = false;
 
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Explicitly set Auth persistence
+    if (!kIsWeb) {
+      FlutterError.onError = (errorDetails) {
+        FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+      };
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+    }
+
     try {
       await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
     } catch (e) {
-      debugPrint('Auth Persistence setup failed: $e');
+      debugPrint('Auth Persistence Error: $e');
     }
   } catch (e) {
-    debugPrint('Firebase Initialization Error: $e');
+    debugPrint('Initialization Error: $e');
   }
 
   runApp(const FocusFlowApp());
@@ -102,13 +120,10 @@ class FocusFlowApp extends StatelessWidget {
             '/categories': (_) => const AuthWrapper(child: CategoryManagerScreen()),
             '/completed-tasks': (_) => const AuthWrapper(child: CompletedTasksScreen()),
             '/pomodoro': (_) => const AuthWrapper(child: PomodoroScreen()),
-            '/focus-summary': (_) => const AuthWrapper(child: FocusSummaryScreen()),
             '/distraction-blocker': (_) => const AuthWrapper(child: DistractionBlockerScreen()),
             '/journal': (_) => const AuthWrapper(child: JournalScreen()),
-            '/ambient-player': (_) => const AuthWrapper(child: AmbientPlayerScreen()),
             '/analytics': (_) => const AuthWrapper(child: ActivityDashboardScreen()),
             '/weekly-report': (_) => const AuthWrapper(child: WeeklyReportScreen()),
-            '/goals': (_) => const AuthWrapper(child: ActivityDashboardScreen()),
             '/profile': (_) => const AuthWrapper(child: ProfileScreen()),
             '/settings': (_) => const AuthWrapper(child: SettingsScreen()),
             '/subscription': (_) => const SubscriptionScreen(),
@@ -137,12 +152,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
     
     try {
       final notifProvider = context.read<NotificationProvider>();
-      context.read<TaskProvider>()
-        ..setNotificationProvider(notifProvider)
-        ..listenToUser(uid);
-      context.read<FocusProvider>()
-        ..setNotificationProvider(notifProvider)
-        ..listenToUser(uid);
+      final taskProvider = context.read<TaskProvider>();
+      taskProvider.setNotificationProvider(notifProvider);
+      taskProvider.listenToUser(uid);
+      final focusProvider = context.read<FocusProvider>();
+      focusProvider.setNotificationProvider(notifProvider);
+      focusProvider.listenToUser(uid);
       context.read<ProjectProvider>().listenToUser(uid);
     } catch (e) {
       debugPrint('Listener Error: $e');
@@ -152,31 +167,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-
-    // RECOVERY LOGIC: If it stays uninitialized for too long, it's likely a Keychain error
-    // We show the login screen instead of a blank screen.
-    if (!auth.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.redAccent)),
-      );
-    }
-
+    if (!auth.isInitialized) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!auth.isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-        }
+        if (mounted) Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
       });
-      // Fallback UI to prevent blank screen
-      return const Scaffold(
-        body: Center(child: Text('Connecting to session...')),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
-    if (auth.user != null) {
-      _startListeners(context, auth.user!.uid);
-    }
-
+    if (auth.user != null) _startListeners(context, auth.user!.uid);
     return widget.child;
   }
 }
