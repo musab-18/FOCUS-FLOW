@@ -16,8 +16,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.8'
-          channel: 'stable'
+          channel: 'stable' # Uses the latest stable version
           cache: true
 
       - name: Install dependencies
@@ -29,6 +28,8 @@ jobs:
           echo "FIREBASE_APP_ID_ANDROID=test" >> .env
           echo "FIREBASE_API_KEY_IOS=test" >> .env
           echo "FIREBASE_APP_ID_IOS=test" >> .env
+          echo "FIREBASE_API_KEY_WEB=test" >> .env
+          echo "FIREBASE_APP_ID_WEB=test" >> .env
           echo "FIREBASE_PROJECT_ID=test" >> .env
           echo "FIREBASE_MESSAGING_SENDER_ID=test" >> .env
           echo "FIREBASE_STORAGE_BUCKET=test" >> .env
@@ -36,5 +37,5 @@ jobs:
       - name: Run tests
         run: flutter test test/analytics_test.dart
 
-      - name: Build APK (Release)
+      - name: Build APK (Debug)
         run: flutter build apk --debug
