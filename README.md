@@ -3,6 +3,7 @@
 ### *Master Your Time. Conquer Your Goals. Elevate Your Mind.*
 
 ![Project Version](https://img.shields.io/badge/FocusFlow-v1.0.0--stable-brightgreen?style=for-the-badge&logo=flutter)
+[![Flutter CI](https://github.com/musab-18/FOCUS-FLOW/actions/workflows/main.yml/badge.svg)](https://github.com/musab-18/FOCUS-FLOW/actions)
 ![State Management](https://img.shields.io/badge/State-Provider-blue?style=for-the-badge)
 ![Database](https://img.shields.io/badge/Database-Firebase-orange?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-android%20%7C%20ios%20%7C%20web-blue?style=for-the-badge)
@@ -26,7 +27,7 @@ This project goes beyond UI/UX, implementing industry-standard engineering pract
 *   **📉 Industrial QA & Monitoring:** 
     *   Integrated **Firebase Crashlytics** for real-time error reporting.
     *   Global **Error Boundaries** to gracefully handle exceptions and prevent the "Red Screen of Death."
-*   **🤖 Automated CI/CD:** A fully configured **GitHub Actions** pipeline that automatically validates code quality and runs tests on every push.
+*   **🤖 Automated CI/CD:** A fully configured **GitHub Actions** pipeline that automatically validates code quality and runs tests on every push. **Build Status:** [![Flutter CI](https://github.com/musab-18/FOCUS-FLOW/actions/workflows/main.yml/badge.svg)](https://github.com/musab-18/FOCUS-FLOW/actions)
 
 ---
 
