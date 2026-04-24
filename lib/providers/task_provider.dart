@@ -6,9 +6,10 @@ import '../models/notification_model.dart';
 import '../services/firestore_service.dart';
 import 'package:uuid/uuid.dart';
 import 'notification_provider.dart';
+import 'analytics_provider.dart';
 
 class TaskProvider extends ChangeNotifier {
-  final FirestoreService _fs = FirestoreService();
+  final FirestoreService _fs;
   final _uuid = const Uuid();
 
   List<TaskModel> _tasks = [];
@@ -16,11 +17,15 @@ class TaskProvider extends ChangeNotifier {
   StreamSubscription? _taskSub;
   StreamSubscription? _catSub;
   NotificationProvider? _notificationProvider;
+  AnalyticsProvider? _analyticsProvider;
   
   String? _currentUserId;
 
-  void setNotificationProvider(NotificationProvider np) {
+  TaskProvider({FirestoreService? firestoreService}) : _fs = firestoreService ?? FirestoreService();
+
+  void setDependencies(NotificationProvider np, AnalyticsProvider ap) {
     _notificationProvider = np;
+    _analyticsProvider = ap;
   }
 
   List<TaskModel> get tasks => _tasks;
@@ -55,6 +60,7 @@ class TaskProvider extends ChangeNotifier {
 
     _taskSub = _fs.tasksStream(userId).listen((tasks) {
       _tasks = tasks;
+      _analyticsProvider?.updateTasks(tasks);
       notifyListeners();
     }, onError: (e) => debugPrint('Firestore Task Stream Error: $e'));
 
@@ -101,6 +107,7 @@ class TaskProvider extends ChangeNotifier {
     );
 
     _tasks.insert(0, task);
+    _analyticsProvider?.updateTasks(_tasks);
     notifyListeners();
 
     _notificationProvider?.add(
@@ -117,6 +124,7 @@ class TaskProvider extends ChangeNotifier {
     final index = _tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       _tasks[index] = task;
+      _analyticsProvider?.updateTasks(_tasks);
       notifyListeners();
     }
     await _fs.updateTask(task);
@@ -130,6 +138,7 @@ class TaskProvider extends ChangeNotifier {
     final index = _tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       _tasks[index] = updated;
+      _analyticsProvider?.updateTasks(_tasks);
       notifyListeners();
     }
 
@@ -145,6 +154,7 @@ class TaskProvider extends ChangeNotifier {
 
   Future<void> deleteTask(String taskId) async {
     _tasks.removeWhere((t) => t.id == taskId);
+    _analyticsProvider?.updateTasks(_tasks);
     notifyListeners();
     await _fs.deleteTask(taskId);
   }
@@ -170,5 +180,11 @@ class TaskProvider extends ChangeNotifier {
 
   Future<void> deleteCategory(String id) async {
     await _fs.deleteCategory(id);
+  }
+
+  @override
+  void dispose() {
+    _stopInternal();
+    super.dispose();
   }
 }

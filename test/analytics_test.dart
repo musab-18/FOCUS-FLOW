@@ -12,7 +12,8 @@ void main() {
     });
 
     test('Streak should be 0 when no tasks exist', () {
-      analytics.updateData([], []);
+      analytics.updateTasks([]);
+      analytics.updateSessions([]);
       expect(analytics.currentStreak, 0);
     });
 
@@ -29,7 +30,7 @@ void main() {
           userId: 'test_user',
         ),
       ];
-      analytics.updateData(tasks, []);
+      analytics.updateTasks(tasks);
       expect(analytics.currentStreak, 1);
     });
 
@@ -55,7 +56,8 @@ void main() {
         ),
       ];
       
-      analytics.updateData(tasks, sessions);
+      analytics.updateTasks(tasks);
+      analytics.updateSessions(sessions);
       // Completion Rate (1.0 * 70) + Focus Bonus (1.0 * 30) = 100
       expect(analytics.productivityScore, 100.0);
     });
@@ -77,7 +79,7 @@ void main() {
           completedPomodoros: 0
         ),
       ];
-      analytics.updateData([], sessions);
+      analytics.updateSessions(sessions);
       expect(analytics.totalFocusMinutes, 40);
     });
 
@@ -108,7 +110,7 @@ void main() {
           userId: 'test_user',
         ),
       ];
-      analytics.updateData(tasks, []);
+      analytics.updateTasks(tasks);
       expect(analytics.categoryBreakdown['work'], 2);
       expect(analytics.categoryBreakdown['personal'], 1);
     });

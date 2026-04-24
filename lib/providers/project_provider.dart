@@ -18,10 +18,14 @@ class ProjectProvider extends ChangeNotifier {
     _sub = _fs.projectsStream(userId).listen((projects) {
       _projects = projects;
       notifyListeners();
-    });
+    }, onError: (e) => debugPrint('Project Stream Error: $e'));
   }
 
-  void stopListening() => _sub?.cancel();
+  void stopListening() {
+    _projects = [];
+    _sub?.cancel();
+    notifyListeners();
+  }
 
   Future<void> createProject({
     required String name,
@@ -57,5 +61,11 @@ class ProjectProvider extends ChangeNotifier {
       completedTasks: completed ? project.completedTasks + 1 : project.completedTasks,
     );
     await _fs.updateProject(updated);
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }

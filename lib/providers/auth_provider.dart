@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart' ;
@@ -7,6 +8,7 @@ enum AuthState { initial, loading, authenticated, unauthenticated, error }
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  StreamSubscription? _authSub;
 
   AuthState _state = AuthState.initial;
   UserModel? _user;
@@ -21,7 +23,7 @@ class AuthProvider extends ChangeNotifier {
 
   AuthProvider() {
     // Listen to Firebase auth state to handle app restarts / session restore
-    _authService.authStateChanges.listen(_onAuthStateChanged);
+    _authSub = _authService.authStateChanges.listen(_onAuthStateChanged);
   }
 
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
@@ -126,5 +128,11 @@ class AuthProvider extends ChangeNotifier {
     return e.toString().contains('firebase')
         ? 'Authentication failed. Please try again.'
         : 'An error occurred. Please try again.';
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 }

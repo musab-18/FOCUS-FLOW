@@ -13,11 +13,6 @@ class WeeklyReportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final analytics = context.watch<AnalyticsProvider>();
     final tasks = context.watch<TaskProvider>();
-    final focus = context.watch<FocusProvider>();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      analytics.updateData(tasks.tasks, focus.sessions);
-    });
 
     final weeklyData = analytics.weeklyCompletedTasks;
     final totalThisWeek = weeklyData.fold<double>(0, (a, b) => a + b).toInt();

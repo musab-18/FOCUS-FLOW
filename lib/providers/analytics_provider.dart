@@ -21,8 +21,12 @@ class AnalyticsProvider extends ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
   bool get isProUser => _isProUser;
 
-  void updateData(List<TaskModel> tasks, List<FocusSessionModel> sessions) {
+  void updateTasks(List<TaskModel> tasks) {
     _tasks = tasks;
+    notifyListeners();
+  }
+
+  void updateSessions(List<FocusSessionModel> sessions) {
     _sessions = sessions;
     notifyListeners();
   }

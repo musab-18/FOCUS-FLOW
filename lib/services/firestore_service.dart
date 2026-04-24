@@ -6,10 +6,11 @@ import '../models/focus_session_model.dart';
 import '../models/journal_entry_model.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  FirestoreService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
 
   // ─── TASKS ───────────────────────────────────────────────
-  // Removed server-side orderBy to prevent "Missing Index" errors which cause data to vanish
   Stream<List<TaskModel>> tasksStream(String userId) {
     return _db
         .collection('tasks')

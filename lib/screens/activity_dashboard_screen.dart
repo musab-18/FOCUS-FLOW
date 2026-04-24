@@ -8,7 +8,8 @@ import '../providers/focus_provider.dart' ;
 import '../theme/app_theme.dart' ;
 
 class ActivityDashboardScreen extends StatefulWidget {
-  const ActivityDashboardScreen({super.key});
+  final int initialTab;
+  const ActivityDashboardScreen({super.key, this.initialTab = 0});
   @override
   State<ActivityDashboardScreen> createState() =>
       _ActivityDashboardScreenState();
@@ -21,7 +22,7 @@ class _ActivityDashboardScreenState extends State<ActivityDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTab);
   }
 
   @override
@@ -35,10 +36,6 @@ class _ActivityDashboardScreenState extends State<ActivityDashboardScreen>
     final analytics = context.watch<AnalyticsProvider>();
     final tasks = context.watch<TaskProvider>();
     final focus = context.watch<FocusProvider>();
-    // sync data
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      analytics.updateData(tasks.tasks, focus.sessions);
-    });
 
     final weeklyData = analytics.weeklyCompletedTasks;
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

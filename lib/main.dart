@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
+import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb, kReleaseMode;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -69,6 +69,42 @@ void main() async {
       };
     }
 
+    // Custom Error Widget for Production
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Material(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline_rounded, color: AppColors.deepCoral, size: 80),
+              const SizedBox(height: 24),
+              Text(
+                'Something went wrong',
+                style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.slateDark),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'We\'ve been notified and are working on a fix. Please try restarting the app.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(fontSize: 16, color: AppColors.slateGrey, height: 1.5),
+              ),
+              if (!kReleaseMode) ...[
+                const SizedBox(height: 24),
+                SingleChildScrollView(
+                  child: Text(
+                    details.exceptionAsString(),
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    };
+
     try {
       await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
     } catch (e) {
@@ -89,11 +125,17 @@ class FocusFlowApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => TaskProvider()),
-        ChangeNotifierProvider(create: (_) => ProjectProvider()),
-        ChangeNotifierProvider(create: (_) => FocusProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()..loadPrefs()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProxyProvider2<NotificationProvider, AnalyticsProvider, TaskProvider>(
+          create: (_) => TaskProvider(),
+          update: (_, np, ap, tp) => tp!..setDependencies(np, ap),
+        ),
+        ChangeNotifierProxyProvider2<NotificationProvider, AnalyticsProvider, FocusProvider>(
+          create: (_) => FocusProvider(),
+          update: (_, np, ap, fp) => fp!..setDependencies(np, ap),
+        ),
+        ChangeNotifierProvider(create: (_) => ProjectProvider()),
       ],
       child: Consumer<AnalyticsProvider>(
         builder: (ctx, analytics, _) => MaterialApp(
@@ -128,6 +170,7 @@ class FocusFlowApp extends StatelessWidget {
             '/settings': (_) => const AuthWrapper(child: SettingsScreen()),
             '/subscription': (_) => const SubscriptionScreen(),
             '/help': (_) => const HelpFeedbackScreen(),
+            '/goals': (_) => const AuthWrapper(child: ActivityDashboardScreen(initialTab: 2)),
           },
         ),
       ),
@@ -151,13 +194,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
     _lastListenedUid = uid;
     
     try {
-      final notifProvider = context.read<NotificationProvider>();
-      final taskProvider = context.read<TaskProvider>();
-      taskProvider.setNotificationProvider(notifProvider);
-      taskProvider.listenToUser(uid);
-      final focusProvider = context.read<FocusProvider>();
-      focusProvider.setNotificationProvider(notifProvider);
-      focusProvider.listenToUser(uid);
+      context.read<TaskProvider>().listenToUser(uid);
+      context.read<FocusProvider>().listenToUser(uid);
       context.read<ProjectProvider>().listenToUser(uid);
     } catch (e) {
       debugPrint('Listener Error: $e');

@@ -6,11 +6,12 @@ import '../models/notification_model.dart' ;
 import '../services/firestore_service.dart' ;
 import 'package:uuid/uuid.dart';
 import 'notification_provider.dart' ;
+import 'analytics_provider.dart';
 
 enum TimerState { idle, running, paused, breakTime, completed }
 
 class FocusProvider extends ChangeNotifier {
-  final FirestoreService _fs = FirestoreService();
+  final FirestoreService _fs;
   final _uuid = const Uuid();
 
   // Timer state
@@ -39,11 +40,15 @@ class FocusProvider extends ChangeNotifier {
   bool _isAmbientPlaying = false;
   String _currentAmbient = 'Rain';
 
-  // Notification integration
+  // Dependencies
   NotificationProvider? _notificationProvider;
+  AnalyticsProvider? _analyticsProvider;
 
-  void setNotificationProvider(NotificationProvider np) {
+  FocusProvider({FirestoreService? firestoreService}) : _fs = firestoreService ?? FirestoreService();
+
+  void setDependencies(NotificationProvider np, AnalyticsProvider ap) {
     _notificationProvider = np;
+    _analyticsProvider = ap;
   }
 
   // Getters
@@ -74,22 +79,34 @@ class FocusProvider extends ChangeNotifier {
   }
 
   void listenToUser(String userId) {
+    if (_userId == userId) return;
     _userId = userId;
-    _journalSub?.cancel();
-    _sessionSub?.cancel();
+    _stopInternal();
+
     _journalSub = _fs.journalStream(userId).listen((entries) {
       _journalEntries = entries;
       notifyListeners();
-    });
+    }, onError: (e) => debugPrint('Journal Stream Error: $e'));
+
     _sessionSub = _fs.focusSessionsStream(userId).listen((sessions) {
       _sessions = sessions;
+      _analyticsProvider?.updateSessions(sessions);
       notifyListeners();
-    });
+    }, onError: (e) => debugPrint('Session Stream Error: $e'));
   }
 
   void stopListening() {
+    _userId = null;
+    _journalEntries = [];
+    _sessions = [];
+    _stopInternal();
+    notifyListeners();
+  }
+
+  void _stopInternal() {
     _journalSub?.cancel();
     _sessionSub?.cancel();
+    _timer?.cancel();
   }
 
   void setWorkDuration(int minutes) {
@@ -232,9 +249,7 @@ class FocusProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _journalSub?.cancel();
-    _sessionSub?.cancel();
+    _stopInternal();
     super.dispose();
   }
 }

@@ -19,13 +19,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final tasks = context.watch<TaskProvider>();
-    final focus = context.watch<FocusProvider>();
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AnalyticsProvider>().updateData(tasks.tasks, focus.sessions);
-    });
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: const _HomeTab(),
